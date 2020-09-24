@@ -149,16 +149,16 @@ namespace mulova.shortcut
         {
             if (section.recordPrefab)
             {
-                var prefab = AssetDatabase.LoadAssetAtPath<Object>(p.assetPath);
+                var prefab = AssetDatabase.LoadAssetAtPath<Object>(p.prefabAssetPath);
                 section.LoadStageRefs();
-                section.ApplyCam(p.assetPath);
+                section.ApplyCam(p.prefabAssetPath);
                 AddAsset(prefab);
             }
         }
 
         private void OnPrefabStageClose(PrefabStage p)
         {
-            var e = section[p.assetPath];
+            var e = section[p.prefabAssetPath];
             if (e != null && section.applyCam)
             {
                 e?.SaveCam();

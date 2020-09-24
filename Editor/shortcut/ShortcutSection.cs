@@ -204,7 +204,7 @@ namespace mulova.shortcut
             var stage = PrefabStageUtility.GetCurrentPrefabStage();
             if (stage != null)
             {
-                action(stage.assetPath);
+                action(stage.prefabAssetPath);
             }
             else
             {
@@ -274,7 +274,7 @@ namespace mulova.shortcut
             var stage = PrefabStageUtility.GetCurrentPrefabStage();
             if (stage != null && stage.stageHandle.IsValid())
             {
-                return stage.assetPath;
+                return stage.prefabAssetPath;
             }
             else
             {
@@ -307,7 +307,7 @@ namespace mulova.shortcut
 
         internal void AddPrefabObject(GameObject o)
         {
-            AddInstance(o, PrefabStageUtility.GetCurrentPrefabStage().assetPath);
+            AddInstance(o, PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath);
         }
 
         internal void AddSceneObject(Object o)
