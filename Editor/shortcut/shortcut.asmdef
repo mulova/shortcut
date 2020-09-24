@@ -1,0 +1,20 @@
+{
+    "name": "shortcut",
+    "references": [
+        "mulova.commons",
+        "mulova.unicore",
+        "mulova.unicore.editor",
+        "reorderablelist",
+        "CrossSceneReference-Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

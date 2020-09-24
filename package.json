@@ -1,0 +1,12 @@
+
+{
+	"name": "mulova.shortcut",
+	"displayName": "shortcut",
+	"version": "1.0.0",
+	"unity": "2018.1",
+	"description": "shortcut mnanager",
+	"keywords": ["mulova", "shortcut"],
+	"category": "mulova",
+	"dependencies": {
+	}
+}
