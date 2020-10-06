@@ -32,7 +32,9 @@ namespace mulova.shortcut
 
         public ShortcutItem Find(Object obj) => entries.Find(e => e.reference == obj);
 
-        public ShortcutItem Find(string id) => entries.Find(e => e.id == id);
+        public ShortcutItem FindById(string id) => entries.Find(e => e.id == id);
+
+        public ShortcutItem Find(string path) => entries.Find(e => e.path == path);
 
         public int IndexOf(Object obj) => entries.FindIndex(e => e.reference == obj);
 

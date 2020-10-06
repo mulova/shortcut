@@ -44,6 +44,7 @@ namespace mulova.shortcut
                 new WindowToolbar.MenuButton { content = new GUIContent("Record modified"), callback = ToggleRecordModified, getSelected = ()=> section.recordModified },
                 new WindowToolbar.MenuButton { content = new GUIContent("Access First", "Sort access first"), callback = ToggleAccessFirst, getSelected = ()=> section.accessFirst },
                 new WindowToolbar.MenuButton { content = new GUIContent("Active Only", "Show active stage only"), callback = ToggleActiveStage, getSelected = ()=> section.activeStageOnly },
+                new WindowToolbar.MenuButton { content = new GUIContent("Apply cam", "Apply/Save camera setting on prefab enter/exit"), callback = ToggleApplyCam, getSelected = ()=> section.applyCam },
                 new WindowToolbar.MenuButton { content = new GUIContent("Vertical", "Show Vertically"), callback = ToggleVertical, getSelected = ()=> section.vertical },
                 new WindowToolbar.MenuButton { content = new GUIContent("Remove Missing", "Remove missing references"), callback = RemoveMissing }
             );
@@ -76,6 +77,12 @@ namespace mulova.shortcut
             void ToggleActiveStage()
             {
                 section.activeStageOnly = !section.activeStageOnly;
+                section.Save();
+            }
+
+            void ToggleApplyCam()
+            {
+                section.applyCam = !section.applyCam;
                 section.Save();
             }
 
