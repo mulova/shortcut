@@ -92,12 +92,8 @@ namespace mulova.scenehistorian
 				{
 					history.Save(PATH);
 				}
-            } catch (ExitGUIException ex)
+            } catch (ExitGUIException)
             {
-                //if (!(ex.GetBaseException() is ExitGUIException))
-                //{
-                //    throw ex.GetBaseException();
-                //}
             }
             EditorGUILayout.EndScrollView();
             OnFooterGUI();
