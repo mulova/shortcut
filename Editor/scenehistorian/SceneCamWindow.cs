@@ -92,7 +92,7 @@ namespace mulova.scenehistorian
 				{
 					history.Save(PATH);
 				}
-            } catch (ExitGUIException ex)
+            } catch (ExitGUIException)
             {
                 //if (!(ex.GetBaseException() is ExitGUIException))
                 //{
