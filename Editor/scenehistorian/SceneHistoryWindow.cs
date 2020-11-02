@@ -6,6 +6,7 @@ using System.Text.Ex;
 using mulova.unicore;
 using Rotorz.Games.Collections;
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -66,8 +67,10 @@ namespace mulova.scenehistorian
 				EditorSceneManager.sceneOpened += OnSceneOpened;
 				EditorSceneManager.sceneClosing += OnSceneClosing;
 				SceneManager.activeSceneChanged += OnActiveScene;
-				SceneManager.sceneLoaded += OnSceneLoaded;
-			}
+                SceneManager.sceneLoaded += OnSceneLoaded;
+                PrefabStageCallbackManager.instance.RegisterOpen(OnPrefabStageOpen, 101);
+                PrefabStageCallbackManager.instance.RegisterClose(OnPrefabStageClose, 102);
+            }
 
             #if UNITY_2017_1_OR_NEWER
             EditorApplication.playModeStateChanged += ChangePlayMode;
@@ -112,16 +115,18 @@ namespace mulova.scenehistorian
 			EditorSceneManager.sceneOpened -= OnSceneOpened;
 			EditorSceneManager.sceneClosing -= OnSceneClosing;
 			SceneManager.activeSceneChanged -= OnActiveScene;
-			SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            PrefabStageCallbackManager.instance.DeregisterOpen(OnPrefabStageOpen);
+            PrefabStageCallbackManager.instance.DeregisterClose(OnPrefabStageClose);
 
-            #if UNITY_2017_1_OR_NEWER
+#if UNITY_2017_1_OR_NEWER
             EditorApplication.playModeStateChanged += ChangePlayMode;
             #else
             EditorApplication.playmodeStateChanged += ChangePlaymode;
             #endif
         }
 
-		private void OnActiveScene(Scene s1, Scene s2)
+        private void OnActiveScene(Scene s1, Scene s2)
 		{
 			if (Application.isPlaying) {
 				return;
@@ -164,25 +169,40 @@ namespace mulova.scenehistorian
 			}
         }
 
-		private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-		{
-//			if (mode != LoadSceneMode.Single)
-//			{
-//				return;
-//			}
-			if (BuildPipeline.isBuildingPlayer)
-			{
-				return;
-			}
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            //			if (mode != LoadSceneMode.Single)
+            //			{
+            //				return;
+            //			}
+            if (BuildPipeline.isBuildingPlayer)
+            {
+                return;
+            }
+            ApplySceneCam(scene);
+        }
+
+        private void ApplySceneCam(Scene scene)
+        {
             if (sceneHistory.useCam)
             {
-			    int index = sceneHistory.IndexOf(scene.path);
-			    if (index >= 0)
-			    {
-				    sceneHistory[index].ApplyCam();
-			    }
+                int index = sceneHistory.IndexOf(scene.path);
+                if (index >= 0)
+                {
+                    sceneHistory[index].ApplyCam();
+                }
             }
-		}
+        }
+
+        private void OnPrefabStageOpen(PrefabStage obj)
+        {
+            SaveCam();
+        }
+
+        private void OnPrefabStageClose(PrefabStage obj)
+        {
+            ApplySceneCam(SceneManager.GetActiveScene());
+        }
 
         private void SaveCam()
         {

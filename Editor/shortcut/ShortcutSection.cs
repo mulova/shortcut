@@ -355,12 +355,6 @@ namespace mulova.shortcut
                 {
                     assetRefs.Move(i, 0);
                 }
-
-                if (applyCam)
-                {
-                    assetRefs[i].SaveCam();
-                }
-
             }
             else
             {
@@ -371,7 +365,6 @@ namespace mulova.shortcut
             {
                 assetRefs.Sort();
             }
-            assetRefs[i].SaveCam();
         }
 
         public void AddObject(Object o)

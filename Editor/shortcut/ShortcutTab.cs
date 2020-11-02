@@ -132,16 +132,16 @@ namespace mulova.shortcut
             OnFocus(true);
             assetFilter = new ShortcutFilter("Assets", true, null);
             sceneFilter = new ShortcutFilter("Scene Objects", false, null);
-            PrefabStage.prefabStageOpened += OnPrefabStageOpen;
-            PrefabStage.prefabStageClosing += OnPrefabStageClose;
+            PrefabStageCallbackManager.instance.RegisterOpen(OnPrefabStageOpen, 102);
+            PrefabStageCallbackManager.instance.RegisterClose(OnPrefabStageClose, 101);
             Selection.selectionChanged += OnSelection;
             EditorApplication.update += OnUpdate;
         }
 
         public override void OnDisable()
         {
-            PrefabStage.prefabStageOpened -= OnPrefabStageOpen;
-            PrefabStage.prefabStageClosing -= OnPrefabStageClose;
+            PrefabStageCallbackManager.instance.DeregisterOpen(OnPrefabStageOpen);
+            PrefabStageCallbackManager.instance.DeregisterClose(OnPrefabStageClose);
             Selection.selectionChanged -= OnSelection;
             EditorApplication.update -= OnUpdate;
         }
