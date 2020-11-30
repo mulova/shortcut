@@ -281,7 +281,7 @@ namespace mulova.scenehistorian
             {
                 return;
             }
-            var firstScenePath = sceneHistory[0].first?.path;
+            var firstScenePath = sceneHistory[0]?.first?.path;
             if (firstScenePath == s.path)
             {
 				SaveCam();

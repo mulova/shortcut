@@ -66,7 +66,13 @@ namespace mulova.scenehistorian
 		{
 			get
 			{
-				return items[i];
+                if (i < items.Count)
+                {
+				    return items[i];
+                } else
+                {
+                    return null;
+                }
 			}
 		}
 
