@@ -18,7 +18,6 @@ namespace mulova.scenehistorian
     {
         private SceneHistory sceneHistory;
         private const string PATH = "Library/scenehistorian/history";
-        private SceneAsset currentScene;
         private bool changed;
         private string nameFilter;
         private ListDrawer<SceneHistoryItem> listDrawer;
@@ -213,6 +212,7 @@ namespace mulova.scenehistorian
             }
         }
 
+        private string singleSceneNowOpening;
         private void OnSceneOpening(string path,OpenSceneMode mode)
         {
 			if (BuildPipeline.isBuildingPlayer)
@@ -225,30 +225,29 @@ namespace mulova.scenehistorian
             }
 			if (mode == OpenSceneMode.Single)
 			{
-				SaveCam();
+                SaveCam();
+                singleSceneNowOpening = path;
+    			sceneHistory.Save(PATH);
 			}
-			sceneHistory.Save(PATH);
         }
 
         private void OnSceneOpened(Scene s, OpenSceneMode mode)
         {
-			if (EditorApplication.isPlayingOrWillChangePlaymode || BuildPipeline.isBuildingPlayer)
+            if (EditorApplication.isPlayingOrWillChangePlaymode || BuildPipeline.isBuildingPlayer)
             {
                 return;
             }
-            currentScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(SceneManager.GetActiveScene().path);
-            if (currentScene == null)
+            if (singleSceneNowOpening == s.path)
             {
-                return;
+                singleSceneNowOpening = null;
             }
-            SceneHistoryItem item = null;
-            int index = sceneHistory.IndexOf(currentScene);
-            
-            if (index >= 0)
+
+            if (mode == OpenSceneMode.Single)
             {
-                item = sceneHistory[index];
-                if (mode == OpenSceneMode.Single)
+                int index = sceneHistory.IndexOf(s.path);
+                if (index >= 0)
                 {
+                    var item = sceneHistory[index];
                     sceneHistory.RemoveAt(index);
                     sceneHistory.Insert(0, item);
                     item.LoadAdditiveScenes();
@@ -259,16 +258,18 @@ namespace mulova.scenehistorian
                 } else
                 {
                     var sceneObj = AssetDatabase.LoadAssetAtPath<Object>(s.path);
-                    if (!item.Contains(sceneObj))
-                    {
-                        item.AddScene(sceneObj);
-                    }
+                    var item = new SceneHistoryItem(sceneObj);
+                    item.SaveCam();
+                    sceneHistory.Insert(0, item);
                 }
             } else
             {
-                item = new SceneHistoryItem(currentScene);
-                item.SaveCam();
-                sceneHistory.Insert(0, item);
+                var item = sceneHistory[0];
+                var sceneObj = AssetDatabase.LoadAssetAtPath<Object>(s.path);
+                if (!item.Contains(sceneObj))
+                {
+                    item.AddScene(sceneObj);
+                }
             }
             sceneHistory.Save(PATH);
             changed = false;
@@ -280,31 +281,30 @@ namespace mulova.scenehistorian
             {
                 return;
             }
-            var scenePath = SceneManager.GetActiveScene().path;
-            if (scenePath == s.path)
+            var firstScenePath = sceneHistory[0].first?.path;
+            if (firstScenePath == s.path)
             {
 				SaveCam();
 			} else
 			{
-				currentScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
-				if (currentScene == null)
+				if (singleSceneNowOpening == firstScenePath) // feasible only when the main scene is not closing
 				{
-					return;
-				}
-				int index = sceneHistory.IndexOf(currentScene);
-				SceneHistoryItem item = null;
-				if (index >= 0)
-				{
-					item = sceneHistory[index];
-					var sceneObj = AssetDatabase.LoadAssetAtPath<Object>(s.path);
-					if (item.Contains(sceneObj))
-					{
-						item.RemoveScene(sceneObj);
-					}
-				} else
-				{
-					item = new SceneHistoryItem(currentScene);
-					sceneHistory.Insert(0, item);
+				    var firstScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(firstScenePath);
+				    int index = sceneHistory.IndexOf(firstScene);
+				    SceneHistoryItem item = null;
+				    if (index >= 0)
+				    {
+					    item = sceneHistory[index];
+					    var closingScene = AssetDatabase.LoadAssetAtPath<Object>(s.path);
+					    if (item.Contains(closingScene))
+					    {
+						    item.RemoveScene(closingScene);
+					    }
+				    } else
+				    {
+					    item = new SceneHistoryItem(firstScene);
+					    sceneHistory.Insert(0, item);
+				    }
 				}
 			}
             sceneHistory.Save(PATH);
