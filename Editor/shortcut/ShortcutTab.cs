@@ -332,7 +332,7 @@ namespace mulova.shortcut
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (editName)
             {
-                EditorGUILayoutEx.TextField("", ref section.name);
+                EditorGUILayoutEx.DelayTextField("", ref section.name);
                 if (GUILayout.Button("Save", EditorStyles.toolbarButton))
                 {
                     editName = false;
