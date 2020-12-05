@@ -176,7 +176,7 @@ namespace mulova.shortcut
         public override void AddContextMenu()
         {
             contextMenu.AddItem(new GUIContent("Shared"), section.isShared, ToggleShared);
-            contextMenu.AddItem(new GUIContent("Cam"), section.applyCam, ToggleCam);
+            contextMenu.AddItem(new GUIContent("Apply Cam"), section.applyCam, ToggleCam);
 
             void ToggleShared()
             {
@@ -332,8 +332,7 @@ namespace mulova.shortcut
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             if (editName)
             {
-                EditorGUILayoutEx.DelayTextField("", ref section.name);
-                if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+                if (EditorGUILayoutEx.TextField("", ref section.name))
                 {
                     editName = false;
                     section.Save();

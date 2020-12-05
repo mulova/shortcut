@@ -14,53 +14,39 @@ namespace mulova.scenehistorian
 		[SerializeField] internal int maxSize = 100;
         [SerializeField] internal bool sort;
 		[SerializeField] internal bool useCam = true;
-		private List<SceneHistoryItem> _sorted = new List<SceneHistoryItem>();
 
-		private class SceneNameSorter : IComparer<SceneHistoryItem>
+		private class StarredSorter : IComparer<SceneHistoryItem>
 		{
-			public int Compare(SceneHistoryItem x,SceneHistoryItem y)
+            private List<SceneHistoryItem> items;
+
+            public StarredSorter(List<SceneHistoryItem> items)
+            {
+				this.items = new List<SceneHistoryItem>(items);
+            }
+
+			public int Compare(SceneHistoryItem item1,SceneHistoryItem item2)
 			{
-				if (x != null)
-				{
-					if (y != null)
-					{
-						return x.ToString().CompareTo(y.ToString());
-					} else
-					{
-						return -1;
-					}
-				} else
-				{
+				int i1 = items.IndexOf(item1);
+				int i2 = items.IndexOf(item2);
+				if (i1 < 2 || i2 < 2)
+                {
+					return i1 - i2;
+                } else if (i2 < 2)
+                {
 					return 1;
-				}
+                }
+				if (item1.starred ^ item2.starred)
+                {
+					return item1.starred ? -1 : 1;
+                }
+				return i1-i2;
 			}
 		}
 
-		public List<SceneHistoryItem> items
-		{
-			get
-			{
-				if (sort)
-				{
-					_sorted.Clear();
-					_sorted.AddRange(_items);
-					_sorted.Sort(new SceneNameSorter());
-					return _sorted;
-				} else
-				{
-					return _items;
-				}
-			}
-		}
+		public List<SceneHistoryItem> items => _items;
 
 
-		public int Count
-		{
-			get 
-			{
-				return items.Count;
-			}
-		}
+		public int Count => items.Count;
 
 		public SceneHistoryItem this[int i]
 		{
@@ -174,6 +160,11 @@ namespace mulova.scenehistorian
             return IndexOf(path) >= 0;
         }
 
+		public void Sort()
+        {
+			_items.Sort(new StarredSorter(_items));
+        }
+
         public static SceneHistory Load(string path)
 		{
 			try
@@ -183,7 +174,12 @@ namespace mulova.scenehistorian
 					var text = File.ReadAllText(path);
                     if (!string.IsNullOrEmpty(text))
 					{
-						return JsonUtility.FromJson<SceneHistory>(text);
+						var h =JsonUtility.FromJson<SceneHistory>(text);
+						if (h.sort)
+                        {
+							h.Sort();
+                        }
+						return h;
 					}
 				}
 			} catch (Exception ex)
@@ -197,6 +193,10 @@ namespace mulova.scenehistorian
 		{
 			try
 			{
+				if (sort)
+				{
+					Sort();
+				}
 				var json = JsonUtility.ToJson(this);
 				File.WriteAllText(path, json);
 			} catch(Exception ex)
