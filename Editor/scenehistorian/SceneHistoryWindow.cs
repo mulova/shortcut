@@ -403,32 +403,14 @@ namespace mulova.scenehistorian
             {
                 if (EditorGUILayoutEx.SearchField("", ref nameFilter))
                 {
-                    if (nameFilter.IsEmpty())
+                    allScenes.Clear();
+                    var guids = AssetDatabase.FindAssets("t:Scene "+nameFilter);
+                    foreach (var id in guids)
                     {
-                        allScenes.Clear();
-                        var guids = AssetDatabase.FindAssets("t:Scene");
-                        foreach (var id in guids)
-                        {
-                            allScenes.Add(new ObjRef(AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(id))));
-                        }
+                        allScenes.Add(new ObjRef(AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(id))));
                     }
                 }
                 toolbar.Draw();
-                //GUI.enabled = sceneHistory.Count >= 2;
-                //if (GUILayout.Button("Back", EditorStyles.toolbarButton, GUILayout.Width(50), GUILayout.Height(20)))
-                //{
-                //    GoBack();
-                //}
-                //var color = GUI.contentColor;
-                //if (sceneHistory.sort)
-                //{
-                //    GUI.contentColor = SORT_COLOR;
-                //}
-                //if (GUILayout.Button(sortIcon, EditorStyles.toolbarButton, GUILayout.Width(30), GUILayout.Height(20)))
-                //{
-                //    ShowMenu();
-                //}
-                //GUI.contentColor = color;
             }
         }
 
@@ -486,21 +468,10 @@ namespace mulova.scenehistorian
                 if (!nameFilter.IsEmpty())
                 {
 					EditorGUILayout.LabelField("Not in history", EditorStyles.miniBoldLabel);
-                    string[] filters = nameFilter.SplitEx(' ');
                     var filteredScenes = new SceneHistory();
                     foreach (var s in allScenes)
                     {
-                        string filename = Path.GetFileNameWithoutExtension(s.path);
-                        bool match = true;
-                        foreach (var f in filters)
-                        {
-                            if (filename.IndexOfIgnoreCase(f) < 0)
-                            {
-                                match = false;
-                                break;
-                            }
-                        }
-                        if (match && !sceneHistory.Contains(s.path))
+                        if (!sceneHistory.Contains(s.path))
                         {
                             filteredScenes.Add(s.reference);
                         }
