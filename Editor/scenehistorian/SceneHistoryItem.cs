@@ -122,11 +122,14 @@ namespace mulova.scenehistorian
         {
             for (int i = 1; i < list.Count; ++i)
             {
-                var s = EditorSceneManager.OpenScene(list[i].path, OpenSceneMode.Additive);
-				if (activeIndex == i)
-				{
-					EditorSceneManager.SetActiveScene(s);
-				}
+                if (!list[i].path.IsEmpty())
+                {
+                    var s = EditorSceneManager.OpenScene(list[i].path, OpenSceneMode.Additive);
+				    if (activeIndex == i)
+				    {
+					    EditorSceneManager.SetActiveScene(s);
+				    }
+                }
             }
         }
 

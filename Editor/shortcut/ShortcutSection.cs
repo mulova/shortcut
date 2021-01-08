@@ -313,7 +313,10 @@ namespace mulova.shortcut
         internal void AddSceneObject(Object o)
         {
             GameObject go = o.GetGameObject();
-            AddInstance(o, go.scene.path);
+            if (go != null)
+            {
+                AddInstance(o, go.scene.path);
+            }
         }
 
         private void AddInstance(Object o, string assetPath)

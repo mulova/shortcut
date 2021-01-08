@@ -53,7 +53,7 @@ namespace mulova.scenehistorian
 				Directory.CreateDirectory(dir);
 			}
             sceneHistory = SceneHistory.Load(PATH);
-			OnSceneOpened(SceneManager.GetActiveScene(), OpenSceneMode.Single);
+			//OnSceneOpened(SceneManager.GetActiveScene(), OpenSceneMode.Single);
             #if UNITY_2018_1_OR_NEWER
             EditorApplication.hierarchyChanged += OnSceneObjChange;
             #else
@@ -287,7 +287,7 @@ namespace mulova.scenehistorian
 				SaveCam();
 			} else
 			{
-				if (singleSceneNowOpening == firstScenePath) // feasible only when the main scene is not closing
+				if (removing && (singleSceneNowOpening == null || singleSceneNowOpening == firstScenePath)) // feasible only when the main scene is not closing
 				{
 				    var firstScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(firstScenePath);
 				    int index = sceneHistory.IndexOf(firstScene);
@@ -471,7 +471,7 @@ namespace mulova.scenehistorian
             {
                 try
                 {
-                    listDrawer.Draw(ReorderableListFlags.ShowIndices | ReorderableListFlags.HideAddButton | ReorderableListFlags.DisableContextMenu);
+                    listDrawer.Draw(ReorderableListFlags.ShowIndices | ReorderableListFlags.DisableContextMenu);
                 } catch (Exception ex)
                 {
                     Debug.LogException(ex);
