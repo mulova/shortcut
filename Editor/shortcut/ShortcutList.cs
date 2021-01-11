@@ -154,5 +154,20 @@ namespace mulova.shortcut
             }
             return list;
         }
+
+        internal Dictionary<string, ShortcutList> Categorize()
+        {
+            var category = new Dictionary<string, ShortcutList>();
+            foreach (var e in entries)
+            {
+                if (!category.TryGetValue(e.objRef.assetPath, out var l))
+                {
+                    l = new ShortcutList();
+                    category[e.objRef.assetPath] = l;
+                }
+                l.Add(e);
+            }
+            return category;
+        }
     }
 }

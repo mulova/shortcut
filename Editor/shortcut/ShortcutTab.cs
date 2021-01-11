@@ -43,7 +43,6 @@ namespace mulova.shortcut
             toolbar.AddMenuButton(new WindowToolbar.MenuButton { content = new GUIContent("Record Prefab"), callback = ToggleRecordPrefabOpen, getSelected = () => section.recordPrefab },
                 new WindowToolbar.MenuButton { content = new GUIContent("Record modified"), callback = ToggleRecordModified, getSelected = ()=> section.recordModified },
                 new WindowToolbar.MenuButton { content = new GUIContent("Access First", "Sort access first"), callback = ToggleAccessFirst, getSelected = ()=> section.accessFirst },
-                new WindowToolbar.MenuButton { content = new GUIContent("Active Only", "Show active stage only"), callback = ToggleActiveStage, getSelected = ()=> section.activeStageOnly },
                 new WindowToolbar.MenuButton { content = new GUIContent("Apply cam", "Apply/Save camera setting on prefab enter/exit"), callback = ToggleApplyCam, getSelected = ()=> section.applyCam },
                 new WindowToolbar.MenuButton { content = new GUIContent("Vertical", "Show Vertically"), callback = ToggleVertical, getSelected = ()=> section.vertical },
                 new WindowToolbar.MenuButton { content = new GUIContent("Remove Missing", "Remove missing references"), callback = RemoveMissing }
@@ -71,12 +70,6 @@ namespace mulova.shortcut
             void ToggleAccessFirst()
             {
                 section.accessFirst = !section.accessFirst;
-                section.Save();
-            }
-
-            void ToggleActiveStage()
-            {
-                section.activeStageOnly = !section.activeStageOnly;
                 section.Save();
             }
 
@@ -157,7 +150,7 @@ namespace mulova.shortcut
             if (section.recordPrefab)
             {
                 var prefab = AssetDatabase.LoadAssetAtPath<Object>(p.prefabAssetPath);
-                section.LoadStageRefs();
+                //section.LoadStageRefs();
                 section.ApplyCam(p.prefabAssetPath);
                 AddAsset(prefab);
             }
@@ -359,18 +352,18 @@ namespace mulova.shortcut
             using (rootScope)
             {
                 ShortcutList assetRefs = section.assetRefs;
-                ShortcutList sceneRefs = section.GetCurrentSceneObjects();
-                var height = section.vertical && sceneRefs.Count > 0 ? GUILayout.MaxHeight(win.position.height / 2) : GUILayout.MaxHeight(window.position.height);
+                ShortcutList stageRefs = section.stageRefs;
+                var height = section.vertical && stageRefs.Count > 0 ? GUILayout.MaxHeight(win.position.height / 2) : GUILayout.MaxHeight(window.position.height);
                 using (var scope = new EditorGUILayout.ScrollViewScope(section.scroll1, height))
                 {
                     changed |= DrawShortcutList(assetRefs, assetFilter, false);
                     section.scroll1 = scope.scrollPosition;
                 }
-                if (sceneRefs.Count > 0)
+                if (stageRefs.Count > 0)
                 {
                     using (var scope = new EditorGUILayout.ScrollViewScope(section.scroll2))
                     {
-                        changed |= DrawShortcutList(sceneRefs, sceneFilter, true);
+                        changed |= DrawShortcutList(stageRefs, sceneFilter, true);
                         section.scroll2 = scope.scrollPosition;
                     }
                 }
@@ -393,9 +386,9 @@ namespace mulova.shortcut
                         }
                         else
                         {
-                            if (!sceneRefs.Contains(o))
+                            if (!stageRefs.Contains(o))
                             {
-                                sceneRefs.Add(o);
+                                stageRefs.Add(o);
                             }
                         }
                         changed = true;

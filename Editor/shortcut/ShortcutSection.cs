@@ -28,13 +28,28 @@ namespace mulova.shortcut
         public bool applyCam = true;
         public int max = 50;
         public bool vertical = true;
-        public bool activeStageOnly = true;
         [NonSerialized] private string dir;
         public ShortcutList assetRefs { get; private set; }
-        public ShortcutList sceneRefs { get; private set; } // current scene's object refs
+        private ShortcutList _stageRefs; // current scene's object refs
         [NonSerialized] private string cachedPath;
         [NonSerialized] public Vector2 scroll1 = new Vector2();
         [NonSerialized] public Vector2 scroll2 = new Vector2();
+
+        public ShortcutList stageRefs
+        {
+            get
+            {
+                var stage = PrefabStageUtility.GetCurrentPrefabStage();
+                var stagePath = stage != null ? stage.prefabAssetPath : SceneManager.GetActiveScene().path;
+                if (stagePath != cachedPath)
+                {
+                    cachedPath = stagePath;
+                    _stageRefs = new ShortcutList();
+                    ForEachStage(guid => _stageRefs.AddRange(LoadStageObjList(guid)));
+                }
+                return _stageRefs;
+            }
+        }
 
         public bool isShared
         {
@@ -66,7 +81,7 @@ namespace mulova.shortcut
             }
         }
 
-        public ShortcutItem this[string id] => assetRefs.Find(id) ?? sceneRefs.Find(id);
+        public ShortcutItem this[string id] => assetRefs.Find(id) ?? _stageRefs.Find(id);
 
         public ShortcutSection() { }
 
@@ -81,13 +96,13 @@ namespace mulova.shortcut
         {
             this.dir = dir;
             assetRefs = new ShortcutList();
-            sceneRefs = new ShortcutList(); // current scene's object refs
+            _stageRefs = new ShortcutList(); // current scene's object refs
         }
 
         internal void RemoveMissing()
         {
             assetRefs.RemoveMissing();
-            sceneRefs.RemoveMissing();
+            _stageRefs.RemoveMissing();
         }
 
         internal static string GetSceneGuid(Scene s)
@@ -100,47 +115,9 @@ namespace mulova.shortcut
             return AssetDatabase.AssetPathToGUID(PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath);
         }
 
-        internal ShortcutList GetCurrentSceneObjects()
+        internal ShortcutList LoadStageObjList(string assetPath)
         {
-            var stage = PrefabStageUtility.GetCurrentPrefabStage();
-            if (stage != null)
-            {
-                return GetSceneObjects(stage.prefabAssetPath);
-            }
-            else
-            {
-                return GetSceneObjects(SceneManager.GetActiveScene().path);
-            }
-        }
-
-        internal ShortcutList GetSceneObjects(string assetPath)
-        {
-            if (cachedPath != assetPath)
-            {
-                cachedPath = assetPath;
-                sceneRefs.Clear();
-                sceneRefs = activeStageOnly? LoadSceneObjList(assetPath): LoadSceneObjList();
-            }
-            return sceneRefs;
-        }
-
-        internal ShortcutList LoadSceneObjList()
-        {
-            var d = new DirectoryInfo(dir);
-            var files = d.GetFiles($"{id}*.{SCENE_EXT}");
-
-            var list = new ShortcutList();
-            foreach (var f in files)
-            {
-                var l = ShortcutList.Load(f.FullName);
-                list.AddRange(l);
-            }
-            return list;
-        }
-
-        internal ShortcutList LoadSceneObjList(string assetPath)
-        {
-            var list = ShortcutList.Load(GetSceneStorePath(assetPath));
+            var list = ShortcutList.Load(GetStageStorePath(assetPath));
             return list;
         }
 
@@ -182,9 +159,9 @@ namespace mulova.shortcut
 
         internal void SelectSceneObject(int index)
         {
-            if (index < sceneRefs.Count)
+            if (index < _stageRefs.Count)
             {
-                var r = sceneRefs[index];
+                var r = _stageRefs[index];
                 Selection.activeObject = r.reference;
             }
             else
@@ -196,10 +173,16 @@ namespace mulova.shortcut
         internal void ClearCache()
         {
             cachedPath = null;
-            sceneRefs.Clear();
+            _stageRefs.Clear();
         }
 
-        private void ForActiveStages(Action<string> action)
+        internal void LoadRefs(string dir)
+        {
+            Init(dir);
+            assetRefs = ShortcutList.Load(GetAssetStorePath());
+        }
+
+        private void ForEachStage(Action<string> action)
         {
             var stage = PrefabStageUtility.GetCurrentPrefabStage();
             if (stage != null)
@@ -216,26 +199,13 @@ namespace mulova.shortcut
             }
         }
 
-        internal void LoadRefs(string dir)
-        {
-            Init(dir);
-            assetRefs = ShortcutList.Load(GetAssetStorePath());
-            LoadStageRefs();
-        }
-
-        internal void LoadStageRefs()
-        {
-            sceneRefs = new ShortcutList();
-            ForActiveStages(guid => sceneRefs.AddRange(LoadSceneObjList(guid)));
-        }
-
         /// <summary>
         /// Save current scene references to file
         /// </summary>
         internal void Save()
         {
             SaveAssetStore();
-            SaveSceneStore();
+            SaveStageStore();
         }
 
         internal void SaveAssetStore()
@@ -248,25 +218,27 @@ namespace mulova.shortcut
             assetRefs.Save(GetAssetStorePath());
         }
 
-        internal void SaveSceneStore()
+        internal void SaveStageStore()
         {
             if (name.IsEmpty())
             {
                 return;
             }
-            var stagePath = GetCurrentStagePath();
-            var stageRefs = sceneRefs.GetStageRefs(stagePath);
-            var storePath = GetSceneStorePath(stagePath);
-            if (stageRefs.Count > 0)
+            var categorized = stageRefs.Categorize();
+            ForEachStage(path =>
             {
-                stageRefs.Save(storePath);
-            } else
-            {
-                if (File.Exists(storePath))
+                var storePath = GetStageStorePath(path);
+                if (categorized.TryGetValue(path, out var s))
                 {
-                    File.Delete(storePath);
+                    s.Save(storePath);
+                } else
+                {
+                    if (File.Exists(storePath))
+                    {
+                        File.Delete(storePath);
+                    }
                 }
-            }
+            });
         }
 
         public static string GetCurrentStagePath()
@@ -278,14 +250,14 @@ namespace mulova.shortcut
             }
             else
             {
-                return SceneManager.GetActiveScene().path;
+                return null;
             }
         }
 
         internal void Sort()
         {
             assetRefs.Sort();
-            sceneRefs.Sort();
+            _stageRefs.Sort();
         }
 
 
@@ -321,7 +293,7 @@ namespace mulova.shortcut
 
         private void AddInstance(Object o, string assetPath)
         {
-            var list = GetSceneObjects(assetPath);
+            var list = stageRefs;
 
             var i = list.IndexOf(o);
             if (i >= 0)
@@ -396,7 +368,7 @@ namespace mulova.shortcut
             return PathUtil.Combine(dir, id + ASSET_EXT);
         }
 
-        private string GetSceneStorePath(string assetPath)
+        private string GetStageStorePath(string assetPath)
         {
             var guid = AssetDatabase.AssetPathToGUID(assetPath);
             return PathUtil.Combine(dir, string.Concat(id, "_", guid, SCENE_EXT));
