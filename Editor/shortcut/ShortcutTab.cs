@@ -353,7 +353,7 @@ namespace mulova.shortcut
             {
                 ShortcutList assetRefs = section.assetRefs;
                 ShortcutList stageRefs = section.stageRefs;
-                var height = section.vertical && stageRefs.Count > 0 ? GUILayout.MaxHeight(win.position.height / 2) : GUILayout.MaxHeight(window.position.height);
+                var height = section.vertical && stageRefs.Count > 0 ? GUILayout.MaxHeight(win.position.height * assetRefs.Count/(assetRefs.Count+stageRefs.Count)) : GUILayout.MaxHeight(window.position.height);
                 using (var scope = new EditorGUILayout.ScrollViewScope(section.scroll1, height))
                 {
                     changed |= DrawShortcutList(assetRefs, assetFilter, false);
