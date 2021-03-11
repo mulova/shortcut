@@ -8,6 +8,7 @@ namespace mulova.shortcut
     public class ShortcutItem : IComparable<ShortcutItem>
     {
         internal int index; // just for sorting
+        public readonly string name;
         public ObjRef objRef;
         public bool starred;
         public SceneCamProperty cam;
@@ -29,6 +30,7 @@ namespace mulova.shortcut
         public ShortcutItem(Object o)
         {
             objRef = new ObjRef(o);
+            name = ToString();
         }
 
         public void SaveCam()

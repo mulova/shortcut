@@ -13,6 +13,7 @@ namespace mulova.scenehistorian
     [Serializable]
     public class SceneHistoryItem : IComparable<SceneHistoryItem>
     {
+        public readonly string name;
         public List<ObjRef> list;
         public bool starred;
 		public int activeIndex;
@@ -23,22 +24,19 @@ namespace mulova.scenehistorian
 		{
 			get
 			{
+                if (list.Count <= activeIndex)
+                {
+                    return list[0];
+                }
 				return list[activeIndex];
 			}
 		}
-
-        public string name
-        {
-            get
-            {
-                return Path.GetFileNameWithoutExtension(ToString());
-            }
-        }
 
         public SceneHistoryItem(Object o)
         {
             list = new List<ObjRef>();
             list.Add(new ObjRef(o));
+            name = ToString();
         }
 
         public void SaveCam()

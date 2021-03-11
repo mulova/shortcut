@@ -23,36 +23,43 @@ namespace mulova.scenehistorian
             var showCam = useCam && (item.cam?.valid ?? false);
             var rightWidth = showCam? 60 : 30;
             newItem = item;
-            var area1 = rect.SplitByWidths((int)rect.width - rightWidth);
             Object obj = item.first.reference as Object;
 
             try
             {
-                var newObj = EditorGUI.ObjectField(area1[0], obj, typeof(Object), false);
-                if (newObj != obj)
+                var area1 = rect.SplitByWidths((int)rect.width - rightWidth);
+                if (obj != null)
                 {
-                    item.first.reference = newObj;
-                }
-                Rect starredRect = area1[1];
-                if (showCam)
-                {
-                    var area2 = area1[1].SplitByWidths(30);
-                    if (showCam && GUI.Button(area2[0], camIcon))
+                    var newObj = EditorGUI.ObjectField(area1[0], obj, typeof(Object), false);
+                    if (newObj != obj)
                     {
-                        item.cam.Apply();
+                        item.first.reference = newObj;
                     }
-                    starredRect = area2[1];
-                }
-                bool starred = item.starred;
-                Color cc = GUI.contentColor;
-                GUI.contentColor = starred? Color.cyan: Color.black;
+                    Rect starredRect = area1[1];
+                    if (showCam)
+                    {
+                        var area2 = area1[1].SplitByWidths(30);
+                        if (showCam && GUI.Button(area2[0], camIcon))
+                        {
+                            item.cam.Apply();
+                        }
+                        starredRect = area2[1];
+                    }
+                    bool starred = item.starred;
+                    Color cc = GUI.contentColor;
+                    GUI.contentColor = starred? Color.cyan: Color.black;
 
-                if (GUI.Button(starredRect, favoriteIcon))
+                    if (GUI.Button(starredRect, favoriteIcon))
+                    {
+                        item.starred = !item.starred;
+                    }
+                    GUI.contentColor = cc;
+                    return starred != item.starred || obj != item.first.reference;
+                } else
                 {
-                    item.starred = !item.starred;
+                    EditorGUI.LabelField(rect, item.name);
+                    return false;
                 }
-                GUI.contentColor = cc;
-                return starred != item.starred || obj != item.first.reference;
             }
 #pragma warning disable 0168
             catch (ExitGUIException ex)

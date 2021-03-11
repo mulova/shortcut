@@ -28,76 +28,83 @@ namespace mulova.shortcut
             var showCam = useCam && (item.cam?.valid?? false);
             var rightWidth = showCam ? (isInstance? 90:60) : 30;
             newItem = item;
-            Rect[] refArea = bound.SplitByWidths((int)bound.width - rightWidth);
             Object obj = item.reference as Object;
-            try
+            if (obj != null)
             {
-                var content = obj != null? EditorGUIUtility.ObjectContent(obj, obj.GetType()): new GUIContent("Null");
-                if (obj != null && item.objRef.category != ObjCategory.Asset)
+                Rect[] refArea = bound.SplitByWidths((int)bound.width - rightWidth);
+                try
                 {
-                    content.text = item.objRef.ToString();
-                    EditorGUI.LabelField(refArea[0], content, EditorStyles.objectField);
-                    int clickCount = EditorGUIEx.GetClick();
-                    if (clickCount == 1)
+                    var content = obj != null? EditorGUIUtility.ObjectContent(obj, obj.GetType()): new GUIContent("Null");
+                    if (obj != null && item.objRef.category != ObjCategory.Asset)
                     {
-                        EditorGUIUtility.PingObject(obj);
-                    } else if (clickCount == 2)
-                    {
-                        if (item.objRef.category == ObjCategory.SceneInstance)
+                        content.text = item.objRef.ToString();
+                        EditorGUI.LabelField(refArea[0], content, EditorStyles.objectField);
+                        int clickCount = EditorGUIEx.GetClick();
+                        if (clickCount == 1)
                         {
-                            Selection.activeObject = obj;
+                            EditorGUIUtility.PingObject(obj);
+                        } else if (clickCount == 2)
+                        {
+                            if (item.objRef.category == ObjCategory.SceneInstance)
+                            {
+                                Selection.activeObject = obj;
+                            }
+                            else if (item.objRef.category == ObjCategory.PrefabInstance)
+                            {
+                                AssetDatabase.OpenAsset(obj);
+                            } else if (obj is SceneAsset)
+                            {
+                                EditorSceneManager.OpenScene(item.objRef.assetPath);
+                            }
                         }
-                        else if (item.objRef.category == ObjCategory.PrefabInstance)
-                        {
-                            AssetDatabase.OpenAsset(obj);
-                        } else if (obj is SceneAsset)
-                        {
-                            EditorSceneManager.OpenScene(item.objRef.assetPath);
-                        }
-                    }
-                } else
-                {
-                    var newObj = EditorGUI.ObjectField(refArea[0], obj, typeof(Object), false);
-                    if (newObj != obj)
-                    {
-                        item.reference = newObj;
-                    }
-                }
-                Rect starredRect = refArea[1];
-                if (showCam)
-                {
-                    Rect[] loadCamArea = refArea[1].SplitByWidths(30);
-                    if (GUI.Button(loadCamArea[0], loadCamIcon))
-                    {
-                        item.cam.Apply();
-                    }
-                    if (isInstance)
-                    {
-                        var saveCamArea = loadCamArea[1].SplitByWidths(30);
-                        if (GUI.Button(saveCamArea[0], saveCamIcon))
-                        {
-                            item.cam.Collect();
-                        }
-                        starredRect = saveCamArea[1];
                     } else
                     {
-                        starredRect = loadCamArea[1];
+                        var newObj = EditorGUI.ObjectField(refArea[0], obj, typeof(Object), false);
+                        if (newObj != obj)
+                        {
+                            item.reference = newObj;
+                        }
                     }
-                }
-                bool starred = item.starred;
-                using (new ContentColorScope(starred ? Color.cyan : Color.black))
-                {
-                    if (GUI.Button(starredRect, favoriteIcon))
+                    Rect starredRect = refArea[1];
+                    if (showCam)
                     {
-                        item.starred = !item.starred;
+                        Rect[] loadCamArea = refArea[1].SplitByWidths(30);
+                        if (GUI.Button(loadCamArea[0], loadCamIcon))
+                        {
+                            item.cam.Apply();
+                        }
+                        if (isInstance)
+                        {
+                            var saveCamArea = loadCamArea[1].SplitByWidths(30);
+                            if (GUI.Button(saveCamArea[0], saveCamIcon))
+                            {
+                                item.cam.Collect();
+                            }
+                            starredRect = saveCamArea[1];
+                        } else
+                        {
+                            starredRect = loadCamArea[1];
+                        }
                     }
+                    bool starred = item.starred;
+                    using (new ContentColorScope(starred ? Color.cyan : Color.black))
+                    {
+                        if (GUI.Button(starredRect, favoriteIcon))
+                        {
+                            item.starred = !item.starred;
+                        }
+                    }
+                    return starred != item.starred || obj != item.reference;
                 }
-                return starred != item.starred || obj != item.reference;
-            }
-#pragma warning disable 0168
-            catch (ExitGUIException ex)
-#pragma warning restore 0168
+    #pragma warning disable 0168
+                catch (ExitGUIException ex)
+    #pragma warning restore 0168
+                {
+                    return false;
+                }
+            } else
             {
+                EditorGUI.SelectableLabel(bound, item.name);
                 return false;
             }
         }
