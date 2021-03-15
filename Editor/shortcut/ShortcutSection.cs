@@ -40,7 +40,11 @@ namespace mulova.shortcut
             get
             {
                 var stage = PrefabStageUtility.GetCurrentPrefabStage();
+#if UNITY_2020_1_OR_NEWER
+                var stagePath = stage != null ? stage.assetPath : SceneManager.GetActiveScene().path;
+#else
                 var stagePath = stage != null ? stage.prefabAssetPath : SceneManager.GetActiveScene().path;
+#endif
                 if (stagePath != cachedPath)
                 {
                     cachedPath = stagePath;
@@ -112,7 +116,11 @@ namespace mulova.shortcut
 
         internal static string GetPrefabGuid()
         {
+#if UNITY_2020_1_OR_NEWER
+            return AssetDatabase.AssetPathToGUID(PrefabStageUtility.GetCurrentPrefabStage().assetPath);
+#else
             return AssetDatabase.AssetPathToGUID(PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath);
+#endif
         }
 
         internal ShortcutList LoadStageObjList(string assetPath)
@@ -187,7 +195,11 @@ namespace mulova.shortcut
             var stage = PrefabStageUtility.GetCurrentPrefabStage();
             if (stage != null)
             {
+#if UNITY_2020_1_OR_NEWER
+                action(stage.assetPath);
+#else
                 action(stage.prefabAssetPath);
+#endif
             }
             else
             {
@@ -246,7 +258,11 @@ namespace mulova.shortcut
             var stage = PrefabStageUtility.GetCurrentPrefabStage();
             if (stage != null && stage.stageHandle.IsValid())
             {
+#if UNITY_2020_1_OR_NEWER
+                return stage.assetPath;
+#else
                 return stage.prefabAssetPath;
+#endif
             }
             else
             {
@@ -279,7 +295,11 @@ namespace mulova.shortcut
 
         internal void AddPrefabObject(GameObject o)
         {
+#if UNITY_2020_1_OR_NEWER
+            AddInstance(o, PrefabStageUtility.GetCurrentPrefabStage().assetPath);
+#else
             AddInstance(o, PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath);
+#endif
         }
 
         internal void AddSceneObject(Object o)
