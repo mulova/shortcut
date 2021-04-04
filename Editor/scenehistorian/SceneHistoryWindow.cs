@@ -163,7 +163,7 @@ namespace mulova.scenehistorian
 			{
 				if (sceneHistory.Count >= 0 && sceneHistory.useCam)
 				{
-					sceneHistory[0].ApplyCam();
+					sceneHistory[0]?.ApplyCam();
 				}
 			}
         }
