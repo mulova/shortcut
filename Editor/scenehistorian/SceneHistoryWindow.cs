@@ -130,6 +130,10 @@ namespace mulova.scenehistorian
 			if (Application.isPlaying) {
 				return;
 			}
+            if (BuildPipeline.isBuildingPlayer)
+            {
+                return;
+            }
 			if (sceneHistory.Count == 0)
 			{
 				return;
