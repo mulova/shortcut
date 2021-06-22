@@ -5,8 +5,7 @@
         "mulova.commons",
         "mulova.unicore",
         "mulova.unicore.editor",
-        "reorderablelist",
-        "CrossSceneReference-Editor"
+        "reorderablelist"
     ],
     "includePlatforms": [
         "Editor"
