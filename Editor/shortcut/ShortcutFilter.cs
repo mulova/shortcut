@@ -44,7 +44,7 @@ namespace mulova.shortcut
             EditorGUILayoutEx.SearchField("", ref filter);
             if (!filter.IsEmpty())
             {
-                predicate.AddPredicate(new ToStringFilter(toString, filter).Filter<ShortcutItem>);
+                predicate.AddPredicate(new ToStringFilter(toString, filter).Filter);
                 //if (asset)
                 //{
                 //    predicate.AddPredicate(s=> new AssetFilter(filter).Filter(s.objRef?.reference));
@@ -73,7 +73,7 @@ namespace mulova.shortcut
                     predicate.AddPredicate(p);
                 }
             }
-            predicate.AddPredicate(new FileTypeFilter(fileType).Filter<ShortcutItem>);
+            predicate.AddPredicate(new FileTypeFilter(fileType).Filter);
 
             if (selected)
             {

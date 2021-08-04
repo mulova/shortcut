@@ -78,7 +78,7 @@ namespace mulova.scenehistorian
             {
                 if (!(ex.GetBaseException() is ExitGUIException))
                 {
-                    throw ex;
+                    throw;
                 }
             }
         }
