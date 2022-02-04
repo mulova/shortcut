@@ -31,7 +31,7 @@ namespace mulova.scenehistorian
 			}
         }
 
-        public override void OnSelected(bool sel)
+        public override void OnTabChange(bool sel)
         {
         }
 
