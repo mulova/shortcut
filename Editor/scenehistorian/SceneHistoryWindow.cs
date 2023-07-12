@@ -142,6 +142,7 @@ namespace mulova.scenehistorian
 				sceneHistory[0].SetActiveScene(s2.path);
 				sceneHistory.Save(PATH);
 			}
+            ApplySceneCam(s2);
 		}
 
 		void OnPauseStateChanged(PauseState state)
@@ -182,7 +183,6 @@ namespace mulova.scenehistorian
             {
                 return;
             }
-            ApplySceneCam(scene);
         }
 
         private void ApplySceneCam(Scene scene)
@@ -328,12 +328,17 @@ namespace mulova.scenehistorian
             }
         }
 
+        private Scene activeScene;
         void OnInspectorUpdate() {
 			if (!Application.isPlaying)
 			{
 				// activeSceneChanged event is not available in Editor mode
 				var s = SceneManager.GetActiveScene();
-				OnActiveScene(s, s);
+                if (activeScene != s)
+                {
+                    activeScene = s;
+				    OnActiveScene(s, s);
+                }
 			}
 		}
 

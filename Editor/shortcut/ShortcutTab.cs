@@ -129,6 +129,7 @@ namespace mulova.shortcut
             PrefabStageCallbackManager.instance.RegisterOpen(OnPrefabStageOpen, 102);
             PrefabStageCallbackManager.instance.RegisterClose(OnPrefabStageClose, 101);
             Selection.selectionChanged += OnSelection;
+            EditorSceneManager.sceneOpening += OnSceneOpening;
             EditorApplication.update += OnUpdate;
         }
 
@@ -137,6 +138,7 @@ namespace mulova.shortcut
             PrefabStageCallbackManager.instance.DeregisterOpen(OnPrefabStageOpen);
             PrefabStageCallbackManager.instance.DeregisterClose(OnPrefabStageClose);
             Selection.selectionChanged -= OnSelection;
+            EditorSceneManager.sceneOpening -= OnSceneOpening;
             EditorApplication.update -= OnUpdate;
         }
 
@@ -144,6 +146,26 @@ namespace mulova.shortcut
         private void OnSelection()
         {
             registered = Selection.activeObject != null && section.assetRefs.Contains(Selection.activeObject);
+        }
+
+        private void OnSceneOpening(string path, OpenSceneMode mode)
+        {
+            if (BuildPipeline.isBuildingPlayer)
+            {
+                return;
+            }
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+            if (mode == OpenSceneMode.Single)
+            {
+                var scene = AssetDatabase.LoadAssetAtPath<SceneAsset>(path);
+                if (!section.assetRefs.Contains(scene))
+                {
+                    section.AddObject(scene);
+                }
+            }
         }
 
         private void OnPrefabStageOpen(PrefabStage p)
