@@ -33,17 +33,17 @@ namespace mulova.shortcut
             name = ToString();
         }
 
-        public void SaveCam()
+        public bool CollectCam()
         {
             if (EditorUtil.sceneView == null)
             {
-                return;
+                return false;
             }
             if (cam == null)
             {
                 cam = new SceneCamProperty();
             }
-            cam.Collect();
+            return cam.Collect();
         }
 
         public void ApplyCam()

@@ -325,7 +325,7 @@ namespace mulova.shortcut
 
                 if (applyCam)
                 {
-                    list[i].SaveCam();
+                    list[i].CollectCam();
                 }
 
             }
@@ -338,7 +338,7 @@ namespace mulova.shortcut
             {
                 list.Sort();
             }
-            list[i].SaveCam();
+            list[i].CollectCam();
         }
 
         internal void AddAsset(Object o)

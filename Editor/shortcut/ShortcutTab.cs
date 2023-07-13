@@ -12,6 +12,7 @@ using System.Ex;
 using UnityEditor.SceneManagement;
 using UnityEditor.Experimental.SceneManagement;
 using System;
+using UnityEngine.SceneManagement;
 
 namespace mulova.shortcut
 {
@@ -44,12 +45,10 @@ namespace mulova.shortcut
             toolbar.AddMenuButton(new WindowToolbar.MenuButton { content = new GUIContent("Record Prefab"), callback = ToggleRecordPrefabOpen, getSelected = () => section.recordPrefab },
                 new WindowToolbar.MenuButton { content = new GUIContent("Record modified"), callback = ToggleRecordModified, getSelected = ()=> section.recordModified },
                 new WindowToolbar.MenuButton { content = new GUIContent("Access First", "Sort access first"), callback = ToggleAccessFirst, getSelected = ()=> section.accessFirst },
-                new WindowToolbar.MenuButton { content = new GUIContent("Apply cam", "Apply/Save camera setting on prefab enter/exit"), callback = ToggleApplyCam, getSelected = ()=> section.applyCam },
+                new WindowToolbar.MenuButton { content = new GUIContent("Apply Cam", "Apply camera setting on prefab enter"), callback = ToggleApplyCam, getSelected = ()=> section.applyCam },
                 new WindowToolbar.MenuButton { content = new GUIContent("Vertical", "Show Vertically"), callback = ToggleVertical, getSelected = ()=> section.vertical },
                 new WindowToolbar.MenuButton { content = new GUIContent("Remove Missing", "Remove missing references"), callback = RemoveMissing }
             );
-            //toolbar.AddButton(new GUIContent("Live Rec"), ToggleLiveRecord, getBgColor: GetLiveRecordColor);
-            //toolbar.AddButton(new GUIContent("Access First", "Sort accessed first"), ToggleAccessFirst, getBgColor: GetAccessFirstColor);
 
             void ToggleRecordPrefabOpen()
             {
@@ -62,11 +61,6 @@ namespace mulova.shortcut
                 section.recordModified = !section.recordModified;
                 section.Save();
             }
-
-            //Color GetLiveRecordColor()
-            //{
-            //    return section.recordPrefab ? Color.green : GUI.backgroundColor;
-            //}
 
             void ToggleAccessFirst()
             {
@@ -85,11 +79,6 @@ namespace mulova.shortcut
                 section.vertical = !section.vertical;
                 section.Save();
             }
-
-            //Color GetAccessFirstColor()
-            //{
-            //    return section.accessFirst ? Color.green : GUI.backgroundColor;
-            //}
 
             void RemoveMissing()
             {
@@ -126,10 +115,12 @@ namespace mulova.shortcut
             OnFocus(true);
             assetFilter = new ShortcutFilter("Assets", true, null);
             sceneFilter = new ShortcutFilter("Scene Objects", false, null);
-            PrefabStageCallbackManager.instance.RegisterOpen(OnPrefabStageOpen, 102);
-            PrefabStageCallbackManager.instance.RegisterClose(OnPrefabStageClose, 101);
+            PrefabStageCallbackManager.instance.RegisterOpen(OnPrefabStageOpen, int.MaxValue);
+            PrefabStageCallbackManager.instance.RegisterClose(OnPrefabStageClose, int.MinValue);
             Selection.selectionChanged += OnSelection;
             EditorSceneManager.sceneOpening += OnSceneOpening;
+            EditorSceneManager.sceneClosing += OnSceneClosing;
+            EditorSceneManager.sceneOpened += OnSceneOpened;
             EditorApplication.update += OnUpdate;
         }
 
@@ -139,6 +130,8 @@ namespace mulova.shortcut
             PrefabStageCallbackManager.instance.DeregisterClose(OnPrefabStageClose);
             Selection.selectionChanged -= OnSelection;
             EditorSceneManager.sceneOpening -= OnSceneOpening;
+            EditorSceneManager.sceneClosing -= OnSceneClosing;
+            EditorSceneManager.sceneOpened -= OnSceneOpened;
             EditorApplication.update -= OnUpdate;
         }
 
@@ -148,6 +141,50 @@ namespace mulova.shortcut
             registered = Selection.activeObject != null && section.assetRefs.Contains(Selection.activeObject);
         }
 
+        private void SaveSceneCamera(Scene scene)
+        {
+            if (BuildPipeline.isBuildingPlayer)
+            {
+                return;
+            }
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+            var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scene.path);
+            var r = section.assetRefs.Find(sceneAsset);
+            if (r != null && r.CollectCam())
+            {
+                section.Save();
+            }
+        }
+
+        private void OnSceneOpened(Scene scene, OpenSceneMode mode)
+        {
+            if (BuildPipeline.isBuildingPlayer)
+            {
+                return;
+            }
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+            if (singleSceneNowOpening == scene.path)
+            {
+                singleSceneNowOpening = null;
+            }
+            if (mode == OpenSceneMode.Single)
+            {
+                var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scene.path);
+                var r = section.assetRefs.Find(sceneAsset);
+                if (r != null)
+                {
+                    r.ApplyCam();
+                }
+            }
+        }
+
+        private string singleSceneNowOpening;
         private void OnSceneOpening(string path, OpenSceneMode mode)
         {
             if (BuildPipeline.isBuildingPlayer)
@@ -164,12 +201,32 @@ namespace mulova.shortcut
                 if (!section.assetRefs.Contains(scene))
                 {
                     section.AddObject(scene);
+                } else
+                {
+                    section[path].CollectCam();
+                    section.Save();
                 }
+                singleSceneNowOpening = path;
+            }
+        }
+
+        private void OnSceneClosing(Scene s, bool removing)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+            var item = section[s.path];
+            if (item != null)
+            {
+                item.CollectCam();
+                section.Save();
             }
         }
 
         private void OnPrefabStageOpen(PrefabStage p)
         {
+            SaveSceneCamera(SceneManager.GetActiveScene());
             if (section.recordPrefab)
             {
 #if UNITY_2020_1_OR_NEWER
@@ -187,6 +244,16 @@ namespace mulova.shortcut
 
         private void OnPrefabStageClose(PrefabStage p)
         {
+            var cur = PrefabStageUtility.GetCurrentPrefabStage();
+            if (cur != p)
+            {
+                return;
+            }
+            SavePrefabStageCam(p);
+        }
+
+        private void SavePrefabStageCam(PrefabStage p)
+        {
 #if UNITY_2020_1_OR_NEWER
             var e = section[p.assetPath];
 #else
@@ -194,8 +261,10 @@ namespace mulova.shortcut
 #endif
             if (e != null && section.applyCam)
             {
-                e?.SaveCam();
-                section.Save();
+                if (e.CollectCam())
+                {
+                    section.Save();
+                }
             }
         }
 
@@ -236,14 +305,17 @@ namespace mulova.shortcut
             {
                 return;
             }
-            if (section.recordModified && Selection.activeObject != null)
+            var stage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (stage != null)
+            {
+                SavePrefabStageCam(stage);
+            } else if (section.recordModified && Selection.activeObject != null)
             {
                 if (IsDirty(Selection.activeObject))
                 {
                     section.AddObject(Selection.activeObject);
                     registered = true;
                 }
-
             }
         }
 

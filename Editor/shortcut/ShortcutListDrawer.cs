@@ -22,7 +22,7 @@ namespace mulova.shortcut
             if (allowSceneObject || !AssetDatabase.GetAssetPath(o).IsEmpty())
             {
                 var s = new ShortcutItem(o);
-                s.SaveCam();
+                s.CollectCam();
                 return s;
             }
             else
